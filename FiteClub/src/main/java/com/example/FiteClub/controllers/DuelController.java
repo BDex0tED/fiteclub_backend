@@ -23,7 +23,7 @@ public class DuelController {
     private DuelRepo duelRepo;
 
     @GetMapping("/duel")
-    public ResponseEntity<DuelResponseDTO> duel(){
+    public ResponseEntity<Object> duel(){
         return duelService.getOrCreateDuel();
     }
 

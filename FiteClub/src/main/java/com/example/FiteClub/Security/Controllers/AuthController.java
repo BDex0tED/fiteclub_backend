@@ -63,7 +63,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody RegisterDto registerDto) {
+    public ResponseEntity<?> register(@RequestBody RegisterDto registerDto) {
         if (userRepository.existsByUsername(registerDto.getUsername())) {
             return new ResponseEntity<>("Username is taken!", HttpStatus.BAD_REQUEST);
         }
@@ -81,7 +81,18 @@ public class AuthController {
 
         userRepository.save(user);
 
-        return new ResponseEntity<>("User created!", HttpStatus.OK);
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(registerDto.getUsername(), registerDto.getPassword())
+            );
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            String token = jwtGenerator.generateToken(authentication);
+            String refreshToken = jwtGenerator.generateRefreshToken(authentication);
+            return new ResponseEntity<>(new AuthResponseDTO(token, refreshToken, "NONE"), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new AuthResponseDTO(null, null, "Invalid username or password"), HttpStatus.BAD_REQUEST);
+        }
+
     }
 
     @PostMapping("/change-password")

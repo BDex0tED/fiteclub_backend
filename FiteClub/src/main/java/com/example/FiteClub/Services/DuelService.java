@@ -9,13 +9,11 @@ import com.example.FiteClub.models.Duel;
 import com.example.FiteClub.repos.CardRepo;
 import com.example.FiteClub.repos.DuelRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -35,7 +33,10 @@ public class DuelService {
 
     private final Category[] categories = Category.values();
 
-    public ResponseEntity<DuelResponseDTO> getOrCreateDuel() {
+    public ResponseEntity<Object> getOrCreateDuel() {
+        if(cardRepo.count() == 0 || cardRepo.count() == 1) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No cards in database");
+        }
         Duel duel = duelRepo.findRandomUnshownDuel();
 
         if (duel == null) {

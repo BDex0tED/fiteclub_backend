@@ -36,15 +36,9 @@ public class CardController {
     public CardDTO postCard(@RequestBody CardDTO cardDTO, Principal principal) {
         String username = principal.getName();
         UserEntity user = userRepo.findByUsername(username).orElseThrow(()->new RuntimeException("User not found"));
-        if (user.getCard() == null) {
-            throw new RuntimeException("User does not have a card");
-        }
 
         if(user.getCard() != null){
-            CardDTO userCard = new CardDTO(user.getCard().getMusic(), user.getCard().getMusician(),
-                    user.getCard().getActor(), user.getCard().getAnime(), user.getCard().getFilm(),
-            user.getCard().getMeme());
-            return userCard;
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Card already exists");
         } else {
             Card card = new Card();
             card.setMusic(cardDTO.getMusic());
@@ -65,25 +59,7 @@ public class CardController {
     @Transactional
     @DeleteMapping("/delete")
     public ResponseEntity<String> deleteCard(Principal principal) {
-        String username = principal.getName();
-        UserEntity user = userRepo.findByUsername(username).orElseThrow(()->new RuntimeException("User not found"));
-        if (user.getCard() == null) {
-            throw new RuntimeException("User does not have a card");
-        }
-
-
-        Card card = cardRepo.findById(user.getCard().getId()).orElseThrow(()->new RuntimeException("Card not found"));
-        List<Duel> duels = duelRepo.findAllByCard1_IdOrCard2_Id(card.getId(), card.getId());
-//        if(duels == null || duels.size() == 0 || card == null){
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Card or duels not found");
-//        }
-        System.out.println(duels);
-        duelRepo.deleteAll(duels);
-        user.setCard(null);
-        userRepo.save(user);
-        cardRepo.delete(card);
-        System.out.println("Card deleted successfully");
-        return ResponseEntity.ok("Card and all related duels were deleted successfully");
+        return cardService.delete(principal);
     }
 
     @GetMapping("/get-cardData")
